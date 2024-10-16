@@ -12,7 +12,7 @@ class JSONEncoder(json.JSONEncoder):
             return o.isoformat()
         return json.JSONEncoder.default(self, o)
 
-client = AsyncIOMotorClient(settings.DATABASE_URL)
+client = AsyncIOMotorClient(f"{settings.DATABASE_URL}&tls=true")
 db = client[settings.MONGODB_DB_NAME]
 
 async def init_db():

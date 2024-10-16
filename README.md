@@ -15,7 +15,7 @@ npm start
 
 server 실행 명령어
 
-python -m uvicorn main:app --reload
+python -m uvicorn main:app --host 0.0.0.0 --reload
 
 ## 주요 기능
 
