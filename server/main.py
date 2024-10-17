@@ -29,7 +29,7 @@ app = FastAPI(lifespan=lifespan)
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://222.107.56.85:3002", "https://kitateam2.duckdns.org"],
+    allow_origins=["http://130.162.154.159:3002","https://test.atbot.app/"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

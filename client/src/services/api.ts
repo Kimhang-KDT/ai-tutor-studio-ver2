@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const API_BASE_URL = "http://222.107.56.85:8001";
+const API_BASE_URL = "http://130.162.154.159:8001";
 
 export const getTestInfos = async () => {
   try {
