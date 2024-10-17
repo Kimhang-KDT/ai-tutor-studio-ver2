@@ -15,19 +15,22 @@ npm start
 
 server 실행 명령어
 
-python -m uvicorn main:app --reload
+python -m uvicorn main:app --host 0.0.0.0 --reload --port 8001
 
 ## 주요 기능
 
 1. 문제 관리
+
    - 모의고사 문제 목록 조회
    - 문제별 상세 정보 및 답안 입력
 
 2. AI 모델 관리
+
    - 난이도별 (Low, Medium, High) 파인튜닝 모델 생성
    - 모델 상태 모니터링
 
 3. 답변 생성 및 테스트
+
    - AI 모델을 통한 답변 생성
    - 생성된 답변과 표준 답안 비교 테스트
 
