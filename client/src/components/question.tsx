@@ -3,6 +3,7 @@ import { Box, Typography, Button, Card, CardContent, TextField, Grid, IconButton
 import RestoreIcon from '@mui/icons-material/Restore';
 import { getQuestions, saveAnswer, getAnswerStatus, getSpecificAnswer, convertSpeechToText } from '../services/api';
 import VoiceRecorder from './VoiceRecorder';
+import { useNavigate } from 'react-router-dom';
 
 export interface QuestionData {
   question_number: number;
@@ -27,14 +28,24 @@ interface AnswerStatus {
   [key: string]: boolean;
 }
 
+type AnswerLevel = 'low' | 'medium' | 'high';
+
+interface Answers {
+  [key: string]: {
+    [K in AnswerLevel]: string;
+  };
+}
+
 const Question: React.FC<QuestionProps> = ({ testId, subjectId }) => {
   const [questions, setQuestions] = useState<QuestionData[]>([]);
   const [baseAnswers, setBaseAnswers] = useState<BaseAnswer[]>([]);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
-  const [answers, setAnswers] = useState<{[key: string]: {low: string, medium: string, high: string}}>({});
+  const [answers, setAnswers] = useState<Answers>({});
   const [answerStatus, setAnswerStatus] = useState<AnswerStatus>({});
-  const [originalAnswers, setOriginalAnswers] = useState<{[key: string]: {low: string, medium: string, high: string}}>({});
+  const [originalAnswers, setOriginalAnswers] = useState<Answers>({});
+  const [isGenerating, setIsGenerating] = useState<{[key: string]: boolean}>({});
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchData = async () => {
@@ -116,11 +127,19 @@ const Question: React.FC<QuestionProps> = ({ testId, subjectId }) => {
 
   const handleVoiceRecordingComplete = async (answerType: 'low' | 'medium' | 'high', audioBlob: Blob) => {
     try {
+      const currentQuestion = questions[currentQuestionIndex];
+      const questionNum = currentQuestion.question_number.toString();
+      
+      setIsGenerating(prev => ({...prev, [answerType]: true}));
+      handleAnswerChange(answerType, '생성 중...');
+      
       const text = await convertSpeechToText(answerType, currentQuestion, audioBlob);
       handleAnswerChange(answerType, text);
     } catch (error) {
       console.error('음성을 텍스트로 변환하는 중 오류 발생:', error);
       alert('음성을 텍스트로 변환하는데 실패했습니다.');
+    } finally {
+      setIsGenerating(prev => ({...prev, [answerType]: false}));
     }
   };
 
@@ -144,6 +163,11 @@ const Question: React.FC<QuestionProps> = ({ testId, subjectId }) => {
         [answerType]: originalAnswers[questionNum][answerType]
       }
     }));
+  };
+
+  const handleGoToList = () => {
+    navigate('/questions');
+    console.log('목록으로 이동');
   };
 
   if (isLoading) {
@@ -221,59 +245,47 @@ const Question: React.FC<QuestionProps> = ({ testId, subjectId }) => {
           </CardContent>
         </Card>
         <Box mt={2}>
-          <Box display="flex" alignItems="center">
-            <TextField
-              label="Low"
-              fullWidth
-              multiline
-              rows={4}
-              margin="normal"
-              value={answers[currentQuestion.question_number.toString()]?.low || ''}
-              onChange={(e) => handleAnswerChange('low', e.target.value)}
-            />
-            <ResetButton onClick={() => handleReset('low')} />
-          </Box>
-          <VoiceRecorder onRecordingComplete={(audioBlob) => handleVoiceRecordingComplete('low', audioBlob)} />
-          
-          <Box display="flex" alignItems="center">
-            <TextField
-              label="Medium"
-              fullWidth
-              multiline
-              rows={4}
-              margin="normal"
-              value={answers[currentQuestion.question_number.toString()]?.medium || ''}
-              onChange={(e) => handleAnswerChange('medium', e.target.value)}
-            />
-            <ResetButton onClick={() => handleReset('medium')} />
-          </Box>
-          <VoiceRecorder onRecordingComplete={(audioBlob) => handleVoiceRecordingComplete('medium', audioBlob)} />
-          
-          <Box display="flex" alignItems="center">
-            <TextField
-              label="High"
-              fullWidth
-              multiline
-              rows={4}
-              margin="normal"
-              value={answers[currentQuestion.question_number.toString()]?.high || ''}
-              onChange={(e) => handleAnswerChange('high', e.target.value)}
-            />
-            <ResetButton onClick={() => handleReset('high')} />
-          </Box>
-          <VoiceRecorder onRecordingComplete={(audioBlob) => handleVoiceRecordingComplete('high', audioBlob)} />
+          {['low', 'medium', 'high'].map((level) => (
+            <Box key={level} display="flex" alignItems="center">
+              <TextField
+                label={level.charAt(0).toUpperCase() + level.slice(1)}
+                fullWidth
+                multiline
+                rows={4}
+                margin="normal"
+                value={answers[currentQuestion.question_number.toString()]?.[level as AnswerLevel] || ''}
+                onChange={(e) => handleAnswerChange(level as AnswerLevel, e.target.value)}
+                disabled={isGenerating[level]}
+              />
+              <ResetButton onClick={() => handleReset(level as AnswerLevel)} />
+              <VoiceRecorder onRecordingComplete={(audioBlob) => handleVoiceRecordingComplete(level as AnswerLevel, audioBlob)} />
+            </Box>
+          ))}
         </Box>
         <Box display="flex" justifyContent="space-between" mt={2}>
-          <Button variant="contained" onClick={handleSaveAnswer}>
-            저장
-          </Button>
-          <Button
-            variant="contained"
-            onClick={handleNextQuestion}
-            disabled={currentQuestionIndex === questions.length - 1}
+          <Button 
+            variant="contained" 
+            onClick={handleGoToList}
+            style={{ backgroundColor: '#D3D3D3', color: 'black' }}
           >
-            다음
+            목록
           </Button>
+          <Box>
+            <Button 
+              variant="contained" 
+              onClick={handleSaveAnswer}
+              style={{ marginRight: '10px' }}
+            >
+              저장
+            </Button>
+            <Button
+              variant="contained"
+              onClick={handleNextQuestion}
+              disabled={currentQuestionIndex === questions.length - 1}
+            >
+              다음
+            </Button>
+          </Box>
         </Box>
       </Grid>
     </Grid>

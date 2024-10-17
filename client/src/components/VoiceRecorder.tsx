@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { Button } from '@mui/material';
+import { IconButton, Tooltip } from '@mui/material';
 import MicIcon from '@mui/icons-material/Mic';
 import StopIcon from '@mui/icons-material/Stop';
 
@@ -49,14 +49,14 @@ const VoiceRecorder: React.FC<VoiceRecorderProps> = ({ onRecordingComplete }) =>
   };
 
   return (
-    <Button
-      variant="contained"
-      color={isRecording ? 'secondary' : 'primary'}
-      startIcon={isRecording ? <StopIcon /> : <MicIcon />}
-      onClick={isRecording ? stopRecording : startRecording}
-    >
-      {isRecording ? '녹음 중지' : '녹음 시작'}
-    </Button>
+    <Tooltip title={isRecording ? '녹음 중지' : '녹음 시작'}>
+      <IconButton
+        color={isRecording ? 'secondary' : 'primary'}
+        onClick={isRecording ? stopRecording : startRecording}
+      >
+        {isRecording ? <StopIcon /> : <MicIcon />}
+      </IconButton>
+    </Tooltip>
   );
 };
 
