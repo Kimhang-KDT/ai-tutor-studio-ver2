@@ -115,5 +115,6 @@ async def get_finetuned_answers(test_id: str, subject_id: str, level: str):
 
 @app.post("/finetuned_answers/{model_id}/{level}/{test_id}/{subject_id}")
 async def create_finetuned_answers_route(model_id: str, level: str, test_id: str, subject_id: str):
+    print(level)
     result = await create_finetuned_answers(model_id, level, test_id, subject_id)
     return result

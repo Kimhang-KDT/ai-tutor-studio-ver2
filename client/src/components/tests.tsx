@@ -1,3 +1,5 @@
+// Tests 컴포넌트: 모든 테스트와 관련 모델의 상태를 표시하고 관리하는 메인 컴포넌트
+
 import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { TableContainer, Table, TableHead, TableRow, TableCell, TableBody, Paper, Typography, Button, CircularProgress } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
@@ -19,7 +21,7 @@ interface TestsInfo {
   levels: {
     base: ModelInfo | null;
     low: ModelInfo | null;
-    medium: ModelInfo | null;  // 'med'를 'medium'으로 변경
+    medium: ModelInfo | null;
     high: ModelInfo | null;
   };
 }
@@ -33,12 +35,14 @@ interface ModelStatus {
 }
 
 const Tests: React.FC = () => {
+  // 상태 관리
   const [testsInfo, setTestsInfo] = useState<TestsInfo[]>([]);
   const [modelStatus, setModelStatus] = useState<ModelStatus>({});
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
   const activeJobsRef = useRef<Set<string>>(new Set());
 
+  // 테스트 정보 가져오기
   const fetchTestsInfo = useCallback(async () => {
     try {
       const data: TestsInfo[] = await getDatalists();
@@ -60,10 +64,12 @@ const Tests: React.FC = () => {
     }
   }, []);
 
+  // 컴포넌트 마운트 시 데이터 로드
   useEffect(() => {
     fetchTestsInfo();
   }, [fetchTestsInfo]);
 
+  // 주기적으로 활성 작업 상태 확인
   useEffect(() => {
     const intervalId = setInterval(() => {
       if (activeJobsRef.current.size > 0) {
@@ -73,6 +79,7 @@ const Tests: React.FC = () => {
     return () => clearInterval(intervalId);
   }, [fetchTestsInfo]);
 
+  // 모델 상태 초기화
   const initializeModelStatus = (data: TestsInfo[]) => {
     const initialStatus: ModelStatus = {};
     data.forEach(testInfo => {
@@ -92,6 +99,7 @@ const Tests: React.FC = () => {
     setModelStatus(initialStatus);
   };
 
+  // 새 모델 생성 처리
   const handleCreateModel = async (testId: string, subjectId: string, level: string) => {
     const statusKey = `${testId}-${subjectId}-${level}`;
     try {
@@ -119,6 +127,7 @@ const Tests: React.FC = () => {
     }
   };
 
+  // 모델 상태 확인
   const checkModelStatus = useCallback(async (jobId: string | null, testId: string, subjectId: string, level: string) => {
     if (!jobId) {
       console.error('Job ID is null or undefined');
@@ -155,6 +164,7 @@ const Tests: React.FC = () => {
     }
   }, [fetchTestsInfo]);
 
+  // 파인튜닝된 답변 생성
   const handleCreateAnswers = async (testId: string, subjectId: string, level: string, modelId: string) => {
     const statusKey = `${testId}-${subjectId}-${level}`;
     try {
@@ -181,6 +191,7 @@ const Tests: React.FC = () => {
     }
   };
 
+  // 모델 상태 렌더링
   const renderStatus = (status: ModelStatus[string]) => {
     switch (status.status) {
       case 'idle':
@@ -206,14 +217,17 @@ const Tests: React.FC = () => {
     }
   };
 
+  // 테스트 페이지로 이동
   const handleTestClick = (testId: string, subjectId: string, level: string) => {
     navigate(`/tests/${testId}/${subjectId}/${level}`);
   };
 
+  // 에러 처리
   if (error) {
     return <Typography color="error">{error}</Typography>;
   }
 
+  // 테이블 렌더링
   return (
     <TableContainer component={Paper}>
       <Table>

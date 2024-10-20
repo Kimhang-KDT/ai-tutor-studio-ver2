@@ -139,8 +139,16 @@ async def create_finetuned_answers(model_id: str, level: str, test_id: str, subj
     questions = await get_questions_by_info(test_id, subject_id)
     base_answers = await get_answers(test_id, subject_id, "base_answer")
     
+    # question_num을 기준으로 정렬
+    questions.sort(key=lambda x: x["question_number"])
+    base_answers.sort(key=lambda x: x["question_num"])
+    
     try:
         for question, base_answer in zip(questions, base_answers):
+            if str(question["question_number"]) != base_answer["question_num"]:
+                print(f"Warning: Question number mismatch. Question: {question['question_number']}, Answer: {base_answer['question_num']}")
+                continue
+            
             response = client.chat.completions.create(
                 model=model_id,
                 temperature=0.3,
