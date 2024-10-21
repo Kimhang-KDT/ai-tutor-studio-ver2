@@ -189,7 +189,7 @@ async def refine_speech_to_text(text: str, level: str, question: dict):
             model="gpt-4o-mini-2024-07-18",
             temperature=0.3,
             messages=[
-                {"role": "system", "content": system_prompt},
+                {"role": "system", "content": system_prompt+"\n입력부분에 풀이 방식이 들어가니까 그 부분을 반영한 답을 적어줘"},
                 {"role": "user", "content": f"문제: {question['question']}\n내용: {question['content']}\n보기: {', '.join(question['choices'])}"},
                 {"role": "user", "content": f"음성 인식 결과: {text}"},
                 {"role": "user", "content": "위의 음성 인식 결과는 문제의 풀이야. 시스템 프롬프트에 맞게 정제해서 풀이를 작성해줘."},
