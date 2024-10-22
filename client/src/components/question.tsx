@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { Box, Typography, Button, Card, CardContent, TextField, Grid, IconButton, Tooltip } from '@mui/material';
+import { Box, Typography, Button, Card, CardContent, TextField, Grid, IconButton, Tooltip, InputAdornment } from '@mui/material';
 import RestoreIcon from '@mui/icons-material/Restore';
-import { getQuestions, saveAnswer, getAnswerStatus, getSpecificAnswer, convertSpeechToText } from '../services/api';
+import AutoFixHighIcon from '@mui/icons-material/AutoFixHigh';
+import { getQuestions, saveAnswer, getAnswerStatus, getSpecificAnswer, convertSpeechToText, refineText } from '../services/api';
 import VoiceRecorder from './VoiceRecorder';
 import { useNavigate } from 'react-router-dom';
 
@@ -45,6 +46,7 @@ const Question: React.FC<QuestionProps> = ({ testId, subjectId }) => {
   const [answerStatus, setAnswerStatus] = useState<AnswerStatus>({});
   const [originalAnswers, setOriginalAnswers] = useState<Answers>({});
   const [isGenerating, setIsGenerating] = useState<{[key: string]: boolean}>({});
+  const [isRefining, setIsRefining] = useState<{[key: string]: boolean}>({});
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -170,6 +172,24 @@ const Question: React.FC<QuestionProps> = ({ testId, subjectId }) => {
     console.log('목록으로 이동');
   };
 
+  const handleRefineText = async (answerType: 'low' | 'medium' | 'high') => {
+    try {
+      const currentQuestion = questions[currentQuestionIndex];
+      const questionNum = currentQuestion.question_number.toString();
+      
+      setIsRefining(prev => ({...prev, [answerType]: true}));
+      handleAnswerChange(answerType, '생성 중...');
+      
+      const text = await refineText(answerType, currentQuestion, answers[questionNum][answerType]);
+      handleAnswerChange(answerType, text);
+    } catch (error) {
+      console.error('텍스트 정제 중 오류 발생:', error);
+      alert('텍스트 정제에 실패했습니다.');
+    } finally {
+      setIsRefining(prev => ({...prev, [answerType]: false}));
+    }
+  };
+
   if (isLoading) {
     return <Typography>로딩 중...</Typography>;
   }
@@ -255,7 +275,22 @@ const Question: React.FC<QuestionProps> = ({ testId, subjectId }) => {
                 margin="normal"
                 value={answers[currentQuestion.question_number.toString()]?.[level as AnswerLevel] || ''}
                 onChange={(e) => handleAnswerChange(level as AnswerLevel, e.target.value)}
-                disabled={isGenerating[level]}
+                disabled={isGenerating[level] || isRefining[level]}
+                InputProps={{
+                  endAdornment: (
+                    <InputAdornment position="end">
+                      <Tooltip title="변환">
+                        <IconButton
+                          edge="end"
+                          onClick={() => handleRefineText(level as AnswerLevel)}
+                          disabled={isGenerating[level] || isRefining[level]}
+                        >
+                          <AutoFixHighIcon />
+                        </IconButton>
+                      </Tooltip>
+                    </InputAdornment>
+                  ),
+                }}
               />
               <ResetButton onClick={() => handleReset(level as AnswerLevel)} />
               <VoiceRecorder onRecordingComplete={(audioBlob) => handleVoiceRecordingComplete(level as AnswerLevel, audioBlob)} />

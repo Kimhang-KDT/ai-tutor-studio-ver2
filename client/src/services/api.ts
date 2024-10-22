@@ -130,3 +130,23 @@ export const createFinetunedAnswers = async (modelId: string, level: string, tes
     throw error;
   }
 };
+
+export const refineText = async (level: string, question: QuestionData, text: string): Promise<string> => {
+  try {
+    const formData = new FormData();
+    formData.append('level', level);
+    formData.append('question', JSON.stringify(question));
+    formData.append('text', text);
+
+    const response = await axios.post(`${API_BASE_URL}/refine-text`, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+
+    return response.data.text;
+  } catch (error) {
+    console.error('텍스트 정제 중 오류 발생:', error);
+    throw error;
+  }
+};

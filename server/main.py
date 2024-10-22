@@ -118,3 +118,9 @@ async def create_finetuned_answers_route(model_id: str, level: str, test_id: str
     print(level)
     result = await create_finetuned_answers(model_id, level, test_id, subject_id)
     return result
+
+@app.post("/refine-text")
+async def refine_text(level: str = Form(...), question: str = Form(...), text: str = Form(...)):
+    question_data = json.loads(question)
+    refined_text = await refine_speech_to_text(text, level, question_data)
+    return {"text": refined_text}
